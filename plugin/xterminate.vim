@@ -14,9 +14,9 @@ function! s:Hex2dec(hex)
 endfunction
 
 function! s:Hex2rgb(hex)
-  let r = Hex2dec(a:hex[0:1])
-  let g = Hex2dec(a:hex[2:3])
-  let b = Hex2dec(a:hex[4:5])
+  let r = s:Hex2dec(a:hex[0:1])
+  let g = s:Hex2dec(a:hex[2:3])
+  let b = s:Hex2dec(a:hex[4:5])
   return [r, g, b]
 endfunction
 
@@ -74,7 +74,7 @@ let s:COLORS = map(['000000', '800000', '008000', '808000', '000080', '800080',
            \'585858', '606060', '666666', '767676', '808080', '8a8a8a',
            \'949494', '9e9e9e', 'a8a8a8', 'b2b2b2', 'bcbcbc', 'c6c6c6',
            \'d0d0d0', 'dadada', 'e4e4e4', 'eeeeee'], 
-           \'Hex2rgb' . '(v:val)')
+           \'s:Hex2rgb' . '(v:val)')
 
 function! FromRgb(rgb)
   let index = 0
@@ -106,6 +106,17 @@ function! XterminateLineOverwrite(line)
 endfunction
 
 function! XterminateBuffer()
+  " check first if buffer is a colorscheme,
+  " search for let g:colors_name=
+  "
+  " loop through each line:
+  "   if line starts with 'hi' or 'highlight':
+  "     search for 'guifg=' in line, if found:
+  "       search for 'ctermfg=' in line, if not found:
+  "         append 'ctermfg=XXXX'
+  "       else if `overwrite` is True:
+  "         replace 'ctermfg=XXXX'
+  "     search for guibg + gui as well
 endfunction
 
 function! XterminateBufferOverwrite()
