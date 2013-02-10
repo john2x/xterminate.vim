@@ -14,9 +14,10 @@ function! s:Hex2dec(hex)
 endfunction
 
 function! s:Hex2rgb(hex)
-  let r = s:Hex2dec(a:hex[0:1])
-  let g = s:Hex2dec(a:hex[2:3])
-  let b = s:Hex2dec(a:hex[4:5])
+  let hex = substitute(a:hex, '#', '', '')
+  let r = s:Hex2dec(hex[0:1])
+  let g = s:Hex2dec(hex[2:3])
+  let b = s:Hex2dec(hex[4:5])
   return [r, g, b]
 endfunction
 
@@ -99,26 +100,47 @@ function! FromHex(hex)
   return FromRgb(s:Hex2rgb(a:hex))
 endfunction
 
-function! XterminateLine(line)
+function! s:GetHighlightSetting(line, setting)
+	let line = tolower(a:line)
+	let idx = stridx(line, a:setting)
+	if idx < 0
+		return ''
+	endif
+	let value = matchstr(line, '[#0-9a-fA-F]\+', idx + strlen(a:setting . '='))
+	return value
 endfunction
 
-function! XterminateLineOverwrite(line)
+function! XterminateLine(line)
+  " remove whitespace
+  let line = substitute(a:line, '^\s*\(.\{-}\)\s*$', '\1', '')
+  " if line starts with 'hi' or 'highlight':
+  if match(line, 'hi') < 0
+	  return
+  endif
+  " search for 'guifg=' in line, if found:
+  let settings = ['guifg', 'guibg', 'gui']
+  for setting in settings
+	  let value = s:GetHighlightSetting(line, setting)
+	  let xterm_setting = substitute(setting, 'gui', 'cterm', '') . '=' . FromHex(value)
+	  echom xterm_setting
+	  " append/replace xterm_setting in current line
+  endfor
+  return value
 endfunction
 
 function! XterminateBuffer()
   " check first if buffer is a colorscheme,
   " search for let g:colors_name=
-  "
-  " loop through each line:
-  "   if line starts with 'hi' or 'highlight':
-  "     search for 'guifg=' in line, if found:
-  "       search for 'ctermfg=' in line, if not found:
-  "         append 'ctermfg=XXXX'
-  "       else if `overwrite` is True:
-  "         replace 'ctermfg=XXXX'
-  "     search for guibg + gui as well
-endfunction
-
-function! XterminateBufferOverwrite()
+  if !search('let g:colors_name')
+	return
+  endif
+  
+  let lnum = 1
+  let end = line('$')
+  while lnum != end
+	  let line = getline(lnum)
+ 	  let new_line = XterminateLine(line)
+	  let lnum = lnum + 1
+  endwhile
 endfunction
 
